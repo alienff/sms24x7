@@ -74,6 +74,7 @@ public class SMS24x7Impl implements SMS24x7 {
     public String send(String email, String password, String from, String to, String text) throws IOException {
         log.info("Sending sms from " + from + " to " + to + " using on-fly authentication");
         final HttpGet get;
+        final String result;
 
         email = encode(email);
         password = encode(password);
@@ -81,8 +82,9 @@ public class SMS24x7Impl implements SMS24x7 {
         to = encode(to);
         from = encode(from);
         get = new HttpGet(API_URL + "?method=push_msg&email=" + email + "&password=" + password + "&text=" + text + "&phone=" + to + "&sender_name=" + from);
-
-        return HTTP_CLIENT.execute(get, HANDLER);
+        result = HTTP_CLIENT.execute(get, HANDLER);
+        log.trace(result);
+        return result;
     }
 
     @Override
@@ -91,7 +93,7 @@ public class SMS24x7Impl implements SMS24x7 {
         final HttpGet get;
         final HttpContext context;
         final CookieStore cookieStore;
-        final String res;
+        final String result;
 
         email = encode(email);
         password = encode(password);
@@ -100,16 +102,18 @@ public class SMS24x7Impl implements SMS24x7 {
         cookieStore = new BasicCookieStore();
 
         context.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-        res = HTTP_CLIENT.execute(get, HANDLER, context);
-        sid =  cookieStore.getCookies().get(0).getValue();
+        result = HTTP_CLIENT.execute(get, HANDLER, context);
+        sid = cookieStore.getCookies().get(0).getValue();
         log.debug("Cookie got: " + Util.maskCookie(sid));
-        return res;
+        log.trace(result);
+        return result;
     }
 
     @Override
     public String send(String from, String to, String text) throws IOException {
         log.info("Sending message using previously logged in session");
         final HttpGet get;
+        final String result;
 
         text = encode(text);
         to = encode(to);
@@ -117,15 +121,20 @@ public class SMS24x7Impl implements SMS24x7 {
         get = new HttpGet(API_URL + "?method=push_msg&text=" + text + "&phone=" + to + "&sender_name=" + from);
         get.setHeader(SM.COOKIE, "sid=" + sid);
 
-        return HTTP_CLIENT.execute(get, HANDLER);
+        result = HTTP_CLIENT.execute(get, HANDLER);
+        log.trace(result);
+        return result;
     }
 
     @Override
     public String logout() throws IOException {
         log.debug("Logging out from sms24x7 service");
         final HttpGet get = new HttpGet(API_URL + "?method=logout");
+        final String result;
         get.setHeader(SM.COOKIE, "sid=" + sid);
         sid = null;
-        return HTTP_CLIENT.execute(get, HANDLER);
+        result = HTTP_CLIENT.execute(get, HANDLER);
+        log.trace(result);
+        return result;
     }
 }
