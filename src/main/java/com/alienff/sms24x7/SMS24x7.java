@@ -25,4 +25,30 @@ public interface SMS24x7 {
      * @throws IOException if something bad happened with internet connection
      */
     String send(String email, String password, String from, String to, String text) throws IOException;
+
+    /**
+     * Login on sms24x7 service
+     * @param email       Username from sms24x7 service
+     * @param password    Password from sms24x7 service
+     * @return Server response body
+     * @throws IOException if something bad happened with internet connection
+     */
+    String login(String email, String password) throws IOException;
+
+    /**
+     * Send sms using previously logged in session
+     * @param from    Sender name. Less or equal to 11 latin symbols (GSM_0338 exactly)
+     * @param to      Recipient phone number in international format. E.g. 79991234567
+     * @param text    Text of the message
+     * @return Server response body
+     * @throws IOException if something bad happened with internet connection
+     */
+    String send(String from, String to, String text) throws IOException;
+
+    /**
+     * Logout from sms24x7 service
+     * @return Server response body
+     * @throws IOException if something bad happened with internet connection
+     */
+    String logout() throws IOException;
 }
