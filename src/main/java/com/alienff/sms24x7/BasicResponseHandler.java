@@ -21,6 +21,13 @@ public class BasicResponseHandler implements ResponseHandler<String> {
     private final String encoding;
 
     /**
+     * Force response encoding to utf-8
+     */
+    public BasicResponseHandler() {
+        this.encoding = "utf-8";
+    }
+
+    /**
      * @param encoding    Force response encoding
      */
     public BasicResponseHandler(String encoding) {

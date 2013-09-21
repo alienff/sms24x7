@@ -32,12 +32,4 @@ public class Util {
             return s;
         }
     }
-
-    static String maskCookie(String cookie) {
-        if (cookie == null || cookie.length() < 2) {
-            return cookie;
-        } else {
-            return cookie.substring(0, cookie.length() / 2) + "...";
-        }
-    }
 }

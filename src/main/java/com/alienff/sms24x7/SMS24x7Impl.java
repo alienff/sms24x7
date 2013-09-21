@@ -1,15 +1,9 @@
 package com.alienff.sms24x7;
 
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.cookie.SM;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,16 +22,9 @@ import static com.alienff.sms24x7.Util.encode;
  */
 public class SMS24x7Impl implements SMS24x7 {
     private static final Logger log = LoggerFactory.getLogger(SMS24x7Impl.class);
-    private static final String API_URL = "https://api.sms24x7.ru/";
+    private static final String API_URL = "http://api.sms24x7.ru/";
 
     private final HttpClient HTTP_CLIENT;
-
-    /**
-     * http://sms24x7.ru/ uses utf-8 for its responses but do not send proper http headers. That's why we specify encoding explicitly.
-     */
-    private static final BasicResponseHandler HANDLER = new BasicResponseHandler("utf-8");
-
-    private String sid;
 
     {
         final PoolingClientConnectionManager ccm = new PoolingClientConnectionManager();
@@ -82,7 +69,7 @@ public class SMS24x7Impl implements SMS24x7 {
         to = encode(to);
         from = encode(from);
         get = new HttpGet(API_URL + "?method=push_msg&email=" + email + "&password=" + password + "&text=" + text + "&phone=" + to + "&sender_name=" + from);
-        result = HTTP_CLIENT.execute(get, HANDLER);
+        result = HTTP_CLIENT.execute(get, new BasicResponseHandler());
         log.trace(result);
         return result;
     }
@@ -91,20 +78,13 @@ public class SMS24x7Impl implements SMS24x7 {
     public String login(String email, String password) throws IOException {
         log.debug("Logging to sms24x7 service");
         final HttpGet get;
-        final HttpContext context;
-        final CookieStore cookieStore;
         final String result;
 
         email = encode(email);
         password = encode(password);
         get = new HttpGet(API_URL + "?method=login&email=" + email + "&password=" + password);
-        context = new BasicHttpContext();
-        cookieStore = new BasicCookieStore();
 
-        context.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-        result = HTTP_CLIENT.execute(get, HANDLER, context);
-        sid = cookieStore.getCookies().get(0).getValue();
-        log.debug("Cookie got: " + Util.maskCookie(sid));
+        result = HTTP_CLIENT.execute(get, new BasicResponseHandler());
         log.trace(result);
         return result;
     }
@@ -119,9 +99,8 @@ public class SMS24x7Impl implements SMS24x7 {
         to = encode(to);
         from = encode(from);
         get = new HttpGet(API_URL + "?method=push_msg&text=" + text + "&phone=" + to + "&sender_name=" + from);
-        get.setHeader(SM.COOKIE, "sid=" + sid);
 
-        result = HTTP_CLIENT.execute(get, HANDLER);
+        result = HTTP_CLIENT.execute(get, new BasicResponseHandler());
         log.trace(result);
         return result;
     }
@@ -130,10 +109,7 @@ public class SMS24x7Impl implements SMS24x7 {
     public String logout() throws IOException {
         log.debug("Logging out from sms24x7 service");
         final HttpGet get = new HttpGet(API_URL + "?method=logout");
-        final String result;
-        get.setHeader(SM.COOKIE, "sid=" + sid);
-        sid = null;
-        result = HTTP_CLIENT.execute(get, HANDLER);
+        final String result = HTTP_CLIENT.execute(get, new BasicResponseHandler());
         log.trace(result);
         return result;
     }
